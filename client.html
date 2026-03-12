@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>CookQuiz</title>
-<favicon href="logo.png"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 :root {
@@ -381,7 +381,7 @@ const EMOJIS = {
 };
 
 // ── State ─────────────────────────────────────────────────────────────────
-let ws, myId, myRoom;
+let ws, myId, myRoom, myIsHost = false;
 let selectedAvatar = AVATARS[0];
 let selectedIngredients = new Set();
 let hasSubmitted = false;
@@ -512,7 +512,24 @@ function showQuestion(msg) {
   document.getElementById('q-origin').textContent = msg.dish.origin;
   document.getElementById('q-count').textContent = msg.dish.correctCount;
 
-  // Build grid
+  // Timer (everyone sees it)
+  startTimer(msg.timerEnd);
+
+  // Answered pips
+  document.getElementById('answered-pips').innerHTML = '';
+  document.getElementById('answered-count').textContent = '';
+
+  if (myIsHost) {
+    // Host = spectateur : pas de grille, pas de bouton valider
+    document.getElementById('q-grid').innerHTML = '';
+    document.getElementById('q-action').innerHTML =
+      `<div class="submitted-msg" style="background:#FFF3ED;color:var(--orange);border:2px solid var(--orange);">
+        👁️ Mode spectateur — tu verras les résultats en direct
+      </div>`;
+    return;
+  }
+
+  // Build grid for players
   const grid = document.getElementById('q-grid');
   grid.innerHTML = msg.ingredients.map(name => {
     const em = EMOJIS[name] || '🥄';
@@ -524,13 +541,6 @@ function showQuestion(msg) {
   document.getElementById('q-action').innerHTML =
     `<button class="btn-submit" id="btn-submit" disabled>✅ Valider</button>`;
   document.getElementById('btn-submit').onclick = submitAnswer;
-
-  // Timer
-  startTimer(msg.timerEnd);
-
-  // Answered pips (unknown players count at start)
-  document.getElementById('answered-pips').innerHTML = '';
-  document.getElementById('answered-count').textContent = '';
 }
 
 function onIngClick(e) {
@@ -641,9 +651,16 @@ function showReveal(msg) {
   // Store scores for next delta
   msg.leaderboard.forEach(p => prevScores[p.id] = p.score);
 
-  document.getElementById('rv-next').textContent = msg.isLast
-    ? '⏳ Résultats finaux dans quelques secondes...'
-    : '⏳ Prochain plat dans quelques secondes...';
+  const nextEl = document.getElementById('rv-next');
+  if (msg.host === myId) {
+    // Host sees a button to advance
+    const label = msg.isLast ? '🏆 Voir le classement final' : '➡️ Plat suivant';
+    nextEl.innerHTML = `<button class="btn btn-green" id="btn-rv-next">${label}</button>`;
+    document.getElementById('btn-rv-next').onclick = () => send({ type: 'next_question' });
+  } else {
+    // Others wait for the host
+    nextEl.innerHTML = `<p style="text-align:center;color:var(--text-l);font-weight:700;font-size:.88rem;padding:8px 0;">⏳ En attente de l'hôte<span class="waiting-dots"></span></p>`;
+  }
 }
 
 function getPlayerAvatar(id) {
@@ -662,9 +679,15 @@ function handle(msg) {
   switch (msg.type) {
 
     case 'room_created':
+      myId = msg.playerId;
+      myRoom = msg.code;
+      myIsHost = true;
+      break;
+
     case 'joined':
       myId = msg.playerId;
       myRoom = msg.code;
+      myIsHost = false;
       break;
 
     case 'room_state':

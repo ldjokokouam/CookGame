@@ -60,6 +60,7 @@ type ClientMessage =
   | { type: "join_room"; code: string; name: string; avatar: string }
   | { type: "start_game" }
   | { type: "submit_answer"; selected: string[] }
+  | { type: "next_question" }
   | { type: "play_again" };
 
 // Outgoing message (loose — shaped per case)
@@ -155,35 +156,35 @@ const DISHES: Dish[] = [
   { id: 1,  name: "Ratatouille",        origin: "🇫🇷 Provence",   image: "https://images.unsplash.com/photo-1572453800999-e8d2d1589b7c?w=800&q=80", correct: ["Tomate","Courgette","Aubergine","Poivron","Ail"],                    decoys: ["Carotte","Pomme de terre","Champignon","Brocoli","Pates"] },
   { id: 2,  name: "Crepes Bretonnes",   origin: "🇫🇷 Bretagne",   image: "https://images.unsplash.com/photo-1519676867240-f03562e64548?w=800&q=80", correct: ["Farine","Oeuf","Lait","Beurre","Sel"],                              decoys: ["Fromage","Ail","Tomate","Riz","Curcuma"] },
   { id: 3,  name: "Croissant",          origin: "🇫🇷 Paris",      image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=80", correct: ["Farine","Beurre","Lait","Levure","Sel"],                              decoys: ["Sucre","Fromage","Huile olive","Noix","Oeuf"] },
-  { id: 4,  name: "Bouillabaisse",      origin: "🇫🇷 Marseille",  image: "https://images.unsplash.com/photo-1534422298391-e4f8c172789a?w=800&q=80", correct: ["Poisson","Tomate","Safran","Fenouil","Ail"],                        decoys: ["Creme fraiche","Moutarde","Pates","Mais","Pomme"] },
-  { id: 5,  name: "Soupe a l'oignon",   origin: "🇫🇷 Paris",      image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&q=80", correct: ["Oignon","Beurre","Bouillon","Pain","Fromage"],                      decoys: ["Crevettes","Riz","Cacao","Ananas","Tomate"] },
+  { id: 4,  name: "Galette Bretonne",   origin: "🇫🇷 Bretagne",   image: "https://cdn.prod.website-files.com/5d0c269d409e5b11b36e12aa/679c9c6f047064a7039fa600_galettes-bretonnes-completes_photo.webp", correct: ["Farine de sarrasin","Oeuf","Beurre","Sel","Lait"],               decoys: ["Sucre","Fromage","Ail","Tomate","Levure"] },
+  { id: 5,  name: "Gateau Nantais",     origin: "🇫🇷 Nantes",     image: "https://liliebakery.fr/wp-content/uploads/2024/01/Recette-gateau-nantais-Lilie-Bakery.jpg", correct: ["Farine","Beurre","Sucre","Oeuf","Rhum"],                        decoys: ["Lait","Levure","Cannelle","Fromage","Sel"] },
   { id: 6,  name: "Boeuf Bourguignon",  origin: "🇫🇷 Bourgogne",  image: "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=800&q=80", correct: ["Boeuf","Vin rouge","Carotte","Oignon","Champignon"],              decoys: ["Crevettes","Safran","Pates","Ananas","Poivron"] },
-  { id: 7,  name: "Quiche Lorraine",    origin: "🇫🇷 Lorraine",   image: "https://images.unsplash.com/photo-1605210055810-bdc1b6c1f5f7?w=800&q=80", correct: ["Pate brisee","Lardons","Oeufs","Creme fraiche","Fromage"],        decoys: ["Saumon","Tomate","Piment","Riz","Safran"] },
-  { id: 8,  name: "Tarte Tatin",        origin: "🇫🇷 Sologne",    image: "https://images.unsplash.com/photo-1568571780765-9c553e55b5a9?w=800&q=80", correct: ["Pomme","Beurre","Sucre","Pate brisee","Cannelle"],                decoys: ["Citron","Fromage","Sel","Oeuf","Creme fraiche"] },
-  { id: 9,  name: "Cassoulet",          origin: "🇫🇷 Languedoc",  image: "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=800&q=80", correct: ["Haricots blancs","Saucisse","Confit de canard","Tomate","Ail"],   decoys: ["Safran","Riz","Crevettes","Poivron","Champignon"] },
-  { id: 10, name: "Vichyssoise",        origin: "🇫🇷 Vichy",      image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80", correct: ["Poireau","Pomme de terre","Creme fraiche","Bouillon","Beurre"],    decoys: ["Tomate","Safran","Poivron","Oeuf","Fromage"] },
-  { id: 11, name: "Gratin Dauphinois",  origin: "🇫🇷 Dauphine",   image: "https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=800&q=80", correct: ["Pomme de terre","Creme fraiche","Ail","Fromage","Noix de muscade"], decoys: ["Courgette","Saumon","Tomate","Champignon","Pate brisee"] },
-  { id: 12, name: "Creme Brulee",       origin: "🇫🇷 Paris",      image: "https://images.unsplash.com/photo-1470124182917-cc6e71b22ecc?w=800&q=80", correct: ["Jaune d'oeuf","Creme fraiche","Sucre","Vanille","Cassonade"],    decoys: ["Farine","Beurre","Cannelle","Lait","Fromage"] },
-  { id: 13, name: "Pot-au-feu",         origin: "🇫🇷 France",     image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80", correct: ["Boeuf","Carotte","Navet","Poireau","Os a moelle"],                decoys: ["Saumon","Riz","Fromage","Ananas","Pate brisee"] },
-  { id: 14, name: "Tapenade",           origin: "🇫🇷 Provence",   image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80", correct: ["Olives noires","Anchois","Capres","Huile olive","Ail"],          decoys: ["Tomate","Beurre","Fromage","Sucre","Vinaigre"] },
-  { id: 15, name: "Flamiche",           origin: "🇫🇷 Picardie",   image: "https://images.unsplash.com/photo-1506280754576-f6fa8a873550?w=800&q=80", correct: ["Pate brisee","Poireau","Beurre","Creme fraiche","Oeuf"],         decoys: ["Safran","Tomate","Saumon","Champignon","Riz"] },
+  { id: 7,  name: "Quiche Lorraine",    origin: "🇫🇷 Lorraine",   image: "https://images.unsplash.com/photo-1650844010413-3f24dc1c182b?q=80", correct: ["Pate brisee","Lardons","Oeufs","Creme fraiche","Fromage"],        decoys: ["Saumon","Tomate","Piment","Riz","Safran"] },
+  { id: 8,  name: "Tarte Tatin",        origin: "🇫🇷 Sologne",    image: "https://media.istockphoto.com/id/2196255681/fr/photo/tarte-tatin-aux-pommes-caram%C3%A9lis%C3%A9es.webp?a=1&b=1&s=612x612&w=0&k=20&c=yXXqtVCUClMINHkgcrQkkNYwXv6HZKrlF_eH5s1t1zw=", correct: ["Pomme","Beurre","Sucre","Pate brisee","Cannelle"],                decoys: ["Citron","Fromage","Sel","Oeuf","Creme fraiche"] },
+  { id: 9,  name: "Cassoulet",          origin: "🇫🇷 Languedoc",  image: "https://media.istockphoto.com/id/2237299415/fr/photo/haricots-cassoulet-avec-de-la-viande-et-de-la-saucisse-cuisine-fran%C3%A7aise-l%C3%A9gumes-plat-produit.webp?a=1&b=1&s=612x612&w=0&k=20&c=YRD4Yedzg2EGb_586jG3_52Ln_zXQDLwJjzAyBl8okk=", correct: ["Haricots blancs","Saucisse","Confit de canard","Tomate","Ail"],   decoys: ["Safran","Riz","Crevettes","Poivron","Champignon"] },
+  { id: 10, name: "Vichyssoise",        origin: "🇫🇷 Vichy",      image: "https://media.istockphoto.com/id/519929340/fr/photo/une-cr%C3%A8me-maison-de-soupe-de-poireaux-avec-cro%C3%BBtons.webp?a=1&b=1&s=612x612&w=0&k=20&c=6m-33upjnCkz-UZHXdzF3Oa7GLn3Y76lnPTTXmqoMoQ=", correct: ["Poireau","Pomme de terre","Creme fraiche","Bouillon","Beurre"],    decoys: ["Tomate","Safran","Poivron","Oeuf","Fromage"] },
+  { id: 11, name: "Gratin Dauphinois",  origin: "🇫🇷 Dauphine",   image: "https://media.istockphoto.com/id/1401921629/fr/photo/pommes-de-terre-au-four-app%C3%A9tissantes-avec-fromage-croquant-dans-un-plat-en-c%C3%A9ramique.webp?a=1&b=1&s=612x612&w=0&k=20&c=c2MqV3R7_kLjReFJI6rgS8LPUtj9XRMND4q4HlWVDgs=", correct: ["Pomme de terre","Creme fraiche","Ail","Fromage","Noix de muscade"], decoys: ["Courgette","Saumon","Tomate","Champignon","Pate brisee"] },
+  { id: 12, name: "Creme Brulee",       origin: "🇫🇷 Paris",      image: "https://plus.unsplash.com/premium_photo-1713840472081-5ee6c5b63536?w=1400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Q3JlbWUlMjBCcnVsZWV8ZW58MHx8MHx8fDA%3D", correct: ["Jaune d'oeuf","Creme fraiche","Sucre","Vanille","Cassonade"],    decoys: ["Farine","Beurre","Cannelle","Lait","Fromage"] },
+  { id: 13, name: "Pot-au-feu",         origin: "🇫🇷 France",     image: "https://media.istockphoto.com/id/2248494639/fr/photo/rago%C3%BBt-de-pot-au-feu-mijotant-sur-la-cuisini%C3%A8re.webp?a=1&b=1&s=612x612&w=0&k=20&c=4ZL8ip6F5c9Kq3mPJVX7yPlXDPB_TR9pQWvFE7xKCoQ=", correct: ["Boeuf","Carotte","Navet","Poireau","Os a moelle"],                decoys: ["Saumon","Riz","Fromage","Ananas","Pate brisee"] },
+  { id: 14, name: "Tapenade",           origin: "🇫🇷 Provence",   image: "https://lebocaliste.fr/wp-content/uploads/2025/03/recette-tapenade-verte.webp", correct: ["Olives noires","Anchois","Capres","Huile olive","Ail"],          decoys: ["Tomate","Beurre","Fromage","Sucre","Vinaigre"] },
+  { id: 15, name: "Flamiche",           origin: "🇫🇷 Picardie",   image: "https://img.cuisineaz.com/660x495/2015/08/03/i79752-quiche-aux-poireaux-et-lait-de-coco.jpg", correct: ["Pate brisee","Poireau","Beurre","Creme fraiche","Oeuf"],         decoys: ["Safran","Tomate","Saumon","Champignon","Riz"] },
 
   // ── 🇪🇸 Plats espagnols ──
   { id: 16, name: "Paella Valenciana",  origin: "🇪🇸 Valence",    image: "https://images.unsplash.com/photo-1534080564583-6be75777b70a?w=800&q=80", correct: ["Riz","Poulet","Lapin","Safran","Haricots verts"],               decoys: ["Crevettes","Pates","Boeuf","Creme","Fromage"] },
-  { id: 17, name: "Gazpacho",           origin: "🇪🇸 Andalousie", image: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&q=80", correct: ["Tomate","Concombre","Poivron","Ail","Huile olive"],             decoys: ["Carotte","Fromage","Creme fraiche","Beurre","Oeuf"] },
-  { id: 18, name: "Tortilla Espanola",  origin: "🇪🇸 Espagne",    image: "https://images.unsplash.com/photo-1591299177061-2b8dc6e2f28b?w=800&q=80", correct: ["Oeuf","Pomme de terre","Oignon","Huile olive","Sel"],          decoys: ["Fromage","Tomate","Farine","Poivron","Beurre"] },
-  { id: 19, name: "Patatas Bravas",     origin: "🇪🇸 Madrid",     image: "https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=800&q=80", correct: ["Pomme de terre","Huile olive","Piment","Tomate","Ail"],         decoys: ["Fromage","Creme fraiche","Oeuf","Farine","Safran"] },
-  { id: 20, name: "Churros",            origin: "🇪🇸 Madrid",     image: "https://images.unsplash.com/photo-1584486483122-af7d2cf99a89?w=800&q=80", correct: ["Farine","Eau","Sel","Huile de friture","Sucre"],              decoys: ["Oeuf","Lait","Beurre","Cannelle","Fromage"] },
-  { id: 21, name: "Croquetas de Jamon", origin: "🇪🇸 Espagne",    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80", correct: ["Jambon iberico","Bechamel","Chapelure","Oeuf","Beurre"],        decoys: ["Safran","Tomate","Riz","Poivron","Fromage"] },
-  { id: 22, name: "Pulpo a la Gallega", origin: "🇪🇸 Galice",     image: "https://images.unsplash.com/photo-1632778149955-e80f8ceca2e8?w=800&q=80", correct: ["Poulpe","Pomme de terre","Piment fume","Huile olive","Sel"],   decoys: ["Crevettes","Tomate","Ail","Fromage","Riz"] },
-  { id: 23, name: "Salmorejo",          origin: "🇪🇸 Cordoue",    image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80", correct: ["Tomate","Pain","Ail","Huile olive","Vinaigre"],                 decoys: ["Concombre","Poivron","Fromage","Creme fraiche","Oeuf"] },
-  { id: 24, name: "Pimientos de Padron",origin: "🇪🇸 Galice",     image: "https://images.unsplash.com/photo-1601315379734-425a469078d7?w=800&q=80", correct: ["Piments de Padron","Huile olive","Sel de mer","Ail","Citron"], decoys: ["Fromage","Tomate","Poivron","Beurre","Vinaigre"] },
-  { id: 25, name: "Fabada Asturiana",   origin: "🇪🇸 Asturies",   image: "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=800&q=80", correct: ["Haricots blancs","Chorizo","Morcilla","Jambon","Safran"],      decoys: ["Tomate","Riz","Creme fraiche","Poivron","Pates"] },
-  { id: 26, name: "Crema Catalana",     origin: "🇪🇸 Catalogne",  image: "https://images.unsplash.com/photo-1470124182917-cc6e71b22ecc?w=800&q=80", correct: ["Jaune d'oeuf","Lait","Sucre","Cannelle","Zeste de citron"],   decoys: ["Farine","Beurre","Creme fraiche","Vanille","Fromage"] },
-  { id: 27, name: "Pan con Tomate",     origin: "🇪🇸 Catalogne",  image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80", correct: ["Pain","Tomate","Huile olive","Ail","Sel"],                     decoys: ["Fromage","Beurre","Vinaigre","Anchois","Olives noires"] },
-  { id: 28, name: "Cocido Madrileno",   origin: "🇪🇸 Madrid",     image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80", correct: ["Pois chiches","Boeuf","Chorizo","Carotte","Chou"],             decoys: ["Riz","Safran","Pates","Courgette","Fromage"] },
-  { id: 29, name: "Gambas al Ajillo",   origin: "🇪🇸 Espagne",    image: "https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=800&q=80", correct: ["Crevettes","Ail","Huile olive","Piment","Persil"],            decoys: ["Tomate","Fromage","Vin blanc","Beurre","Citron vert"] },
-  { id: 30, name: "Tarta de Santiago",  origin: "🇪🇸 Galice",     image: "https://images.unsplash.com/photo-1568571780765-9c553e55b5a9?w=800&q=80", correct: ["Amandes","Sucre","Oeuf","Zeste de citron","Cannelle"],        decoys: ["Farine","Beurre","Lait","Fromage","Creme fraiche"] },
+  { id: 17, name: "Gazpacho",           origin: "🇪🇸 Andalousie", image: "https://plus.unsplash.com/premium_photo-1722427244478-d40cfe83cc9c?q=80&w=1524&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", correct: ["Tomate","Concombre","Poivron","Ail","Huile olive"],             decoys: ["Carotte","Fromage","Creme fraiche","Beurre","Oeuf"] },
+  { id: 18, name: "Tortilla Espanola",  origin: "🇪🇸 Espagne",    image: "https://media.istockphoto.com/id/1318844161/fr/photo/vue-normale-dune-omelette-espagnole-typique-de-pomme-de-terre-avec-une-portion-s%C3%A9par%C3%A9e-avec.webp?a=1&b=1&s=612x612&w=0&k=20&c=jOl-2k-IDnjRWVMMmhEvM8dt6XItQoiTfjNXszrREnI=", correct: ["Oeuf","Pomme de terre","Oignon","Huile olive","Sel"],          decoys: ["Fromage","Tomate","Farine","Poivron","Beurre"] },
+  { id: 19, name: "Patatas Bravas",     origin: "🇪🇸 Madrid",     image: "https://www.simplyrecipes.com/thmb/UiqoGtmbOYp9o8TLFJU_CuPz2Q4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/simply-recipes-patatas-bravas-lead-3-eca48aed6f9b4c4db38c35fdd1dc1509.jpg", correct: ["Pomme de terre","Huile olive","Piment","Tomate","Ail"],         decoys: ["Fromage","Creme fraiche","Oeuf","Farine","Safran"] },
+  { id: 20, name: "Churros",            origin: "🇪🇸 Madrid",     image: "https://plus.unsplash.com/premium_photo-1713687789756-b38c7870eef6?w=1400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Q2h1cnJvc3xlbnwwfHwwfHx8MA%3D%3D", correct: ["Farine","Eau","Sel","Huile de friture","Sucre"],              decoys: ["Oeuf","Lait","Beurre","Cannelle","Fromage"] },
+  { id: 21, name: "Croquetas de Jamon", origin: "🇪🇸 Espagne",    image: "https://media.istockphoto.com/id/2152169503/fr/photo/gros-plan-sur-les-croquettes-de-jambon-espagnol-%C3%A0-la-sauce-blanche.webp?a=1&b=1&s=612x612&w=0&k=20&c=aowssxCxNRRRU4JMH3UhNaoK_zn9_uiqPPgOUOqMnG0=", correct: ["Jambon iberico","Bechamel","Chapelure","Oeuf","Beurre"],        decoys: ["Safran","Tomate","Riz","Poivron","Fromage"] },
+  { id: 22, name: "Pulpo a la Gallega", origin: "🇪🇸 Galice",     image: "https://recetasdecocina.elmundo.es/wp-content/uploads/2024/10/pulpo-a-la-gallega-1024x683.jpg", correct: ["Poulpe","Pomme de terre","Piment fume","Huile olive","Sel"],   decoys: ["Crevettes","Tomate","Ail","Fromage","Riz"] },
+  { id: 23, name: "Salmorejo",          origin: "🇪🇸 Cordoue",    image: "https://media.istockphoto.com/id/2214041442/fr/photo/salmorejo-cordob%C3%A9s-soupe-froide-aux-tomates-et-l%C3%A9gumes-projet%C3%A9e-den-haut-sur-une-table-en.webp?a=1&b=1&s=612x612&w=0&k=20&c=_nA76OKMc2Dv706rCY8KfZwYKg8kYIP4b1Oj_uHJJZ4=", correct: ["Tomate","Pain","Ail","Huile olive","Vinaigre"],                 decoys: ["Concombre","Poivron","Fromage","Creme fraiche","Oeuf"] },
+  { id: 24, name: "Pimientos de Padron",origin: "🇪🇸 Galice",     image: "https://media.istockphoto.com/id/2234637137/fr/photo/poivrons-padron.webp?a=1&b=1&s=612x612&w=0&k=20&c=AKIpZqlTzKcWWoGd_1Rv9NmgU9gB_n9f6TpN287EL9c=", correct: ["Piments de Padron","Huile olive","Sel de mer","Ail","Citron"], decoys: ["Fromage","Tomate","Poivron","Beurre","Vinaigre"] },
+  { id: 25, name: "Fabada Asturiana",   origin: "🇪🇸 Asturies",   image: "https://media.istockphoto.com/id/1299447353/fr/photo/fabada-asturiana-au-soleil.webp?a=1&b=1&s=612x612&w=0&k=20&c=3rdAzeBoUHS3Z7rUmMO0uWlelEKHIDGCRESZuQ_pVUE=", correct: ["Haricots blancs","Chorizo","Morcilla","Jambon","Safran"],      decoys: ["Tomate","Riz","Creme fraiche","Poivron","Pates"] },
+  { id: 26, name: "Crema Catalana",     origin: "🇪🇸 Catalogne",  image: "https://media.istockphoto.com/id/2237721685/fr/photo/cr%C3%A8me-flamb%C3%A9e-catalane.webp?a=1&b=1&s=612x612&w=0&k=20&c=6pAyQ3_TEMcf1aEyARbVtbxiWllO5He-3rIx391_irM=", correct: ["Jaune d'oeuf","Lait","Sucre","Cannelle","Zeste de citron"],   decoys: ["Farine","Beurre","Creme fraiche","Vanille","Fromage"] },
+  { id: 27, name: "Pan con Tomate",     origin: "🇪🇸 Catalogne",  image: "https://plus.unsplash.com/premium_photo-1695120370896-24b8660de7a1?w=1400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8UGFuJTIwY29uJTIwVG9tYXRlfGVufDB8fDB8fHww", correct: ["Pain","Tomate","Huile olive","Ail","Sel"],                     decoys: ["Fromage","Beurre","Vinaigre","Anchois","Olives noires"] },
+  { id: 28, name: "Cocido Madrileno",   origin: "🇪🇸 Madrid",     image: "https://media.istockphoto.com/id/1315051061/fr/photo/plat-de-rago%C3%BBt-de-pois-chiches.webp?a=1&b=1&s=612x612&w=0&k=20&c=PiErNZErQGKyeQwQX1AAJTSbAvi-4AEUnN49QmPmpjM=", correct: ["Pois chiches","Boeuf","Chorizo","Carotte","Chou"],             decoys: ["Riz","Safran","Pates","Courgette","Fromage"] },
+  { id: 29, name: "Gambas al Ajillo",   origin: "🇪🇸 Espagne",    image: "https://media.istockphoto.com/id/1499415510/fr/photo/crevettes-savoureuses-avec-gambas-%C3%A0-lail-al-ajillo-en-gros-plan-vue-de-dessus-horizontale.webp?a=1&b=1&s=612x612&w=0&k=20&c=u47mmFVQvNodSlvGA2Nv6qluSWC1OUfAeGE7VFlJCIg=", correct: ["Crevettes","Ail","Huile olive","Piment","Persil"],            decoys: ["Tomate","Fromage","Vin blanc","Beurre","Citron vert"] },
+  { id: 30, name: "Tarta de Santiago",  origin: "🇪🇸 Galice",     image: "https://media.istockphoto.com/id/613788796/fr/photo/tarta-de-santiago-g%C3%A2teau-aux-amandes-espagnoles.webp?a=1&b=1&s=612x612&w=0&k=20&c=yqqA8Sh9jq8OMBeyur8ROaEd0HtHN0ySDGhsC0H1DYU=", correct: ["Amandes","Sucre","Oeuf","Zeste de citron","Cannelle"],        decoys: ["Farine","Beurre","Lait","Fromage","Creme fraiche"] },
 ];
 
 function shuffle<T>(arr: T[]): T[] {
@@ -193,7 +194,7 @@ function shuffle<T>(arr: T[]): T[] {
 // ── Room / Game state ─────────────────────────────────────────────────────
 
 const ROUND_DURATION = 60; // seconds per question
-const ROUNDS_PER_GAME = 7;
+const ROUNDS_PER_GAME = 10;
 
 const rooms = new Map<string, Room>();
 
@@ -296,6 +297,7 @@ function revealQuestion(room: Room): void {
   const correctSet = new Set(q.correct);
 
   for (const p of room.players.values()) {
+    if (p.id === room.host) continue; // host doesn't play
     const ans = room.answers.get(p.id);
     if (!ans) continue;
     const { selected, timeBonus } = ans;
@@ -313,6 +315,7 @@ function revealQuestion(room: Room): void {
   }
 
   const leaderboard = [...room.players.values()]
+    .filter((p) => p.id !== room.host)
     .map((p) => ({ id: p.id, name: p.name, avatar: p.avatar, score: p.score }))
     .sort((a, b) => b.score - a.score);
 
@@ -322,22 +325,14 @@ function revealQuestion(room: Room): void {
   }
 
   const isLast = room.currentQ >= ROUNDS_PER_GAME - 1;
-  broadcast(room, { type: "reveal", correct: q.correct, answers: answersMap, leaderboard, isLast });
-
-  const delay = isLast ? 5000 : 4000;
-  room.timer = setTimeout(() => {
-    if (isLast) {
-      endGame(room);
-    } else {
-      room.currentQ++;
-      startQuestion(room);
-    }
-  }, delay);
+  broadcast(room, { type: "reveal", correct: q.correct, answers: answersMap, leaderboard, isLast, host: room.host });
+  // No auto-advance — the host clicks "next" manually
 }
 
 function endGame(room: Room): void {
   room.phase = "results";
   const leaderboard = [...room.players.values()]
+    .filter((p) => p.id !== room.host)
     .map((p) => ({ id: p.id, name: p.name, avatar: p.avatar, score: p.score }))
     .sort((a, b) => b.score - a.score);
   broadcast(room, { type: "results", leaderboard });
@@ -399,8 +394,8 @@ function handleMessage(socket: WsSocket, raw: string): void {
         sendWS(socket, { type: "error", text: "Partie déjà en cours !" });
         return;
       }
-      if (room.players.size >= 10) {
-        sendWS(socket, { type: "error", text: "Salle pleine (10 max) !" });
+      if (room.players.size >= 20) {
+        sendWS(socket, { type: "error", text: "Salle pleine (20 max) !" });
         return;
       }
       const player: Player = {
@@ -432,6 +427,7 @@ function handleMessage(socket: WsSocket, raw: string): void {
     case "submit_answer": {
       const room = rooms.get(socket.roomCode ?? "");
       if (!room || room.phase !== "question") return;
+      if (socket.id === room.host) return; // host doesn't play
       if (room.answers.has(socket.id)) return;
 
       const timeLeft = Math.max(0, room.timerEnd - Date.now());
@@ -442,16 +438,29 @@ function handleMessage(socket: WsSocket, raw: string): void {
         pts: 0,
       });
 
+      const playerCount = room.players.size - 1; // exclude host
       broadcast(room, {
         type: "player_answered",
         playerId: socket.id,
         answeredCount: room.answers.size,
-        totalCount: room.players.size,
+        totalCount: playerCount,
       });
 
-      if (room.answers.size >= room.players.size) {
+      if (room.answers.size >= playerCount) {
         if (room.timer) clearTimeout(room.timer);
         setTimeout(() => revealQuestion(room), 800);
+      }
+      break;
+    }
+
+    case "next_question": {
+      const room = rooms.get(socket.roomCode ?? "");
+      if (!room || room.host !== socket.id || room.phase !== "reveal") return;
+      if (room.currentQ >= ROUNDS_PER_GAME - 1) {
+        endGame(room);
+      } else {
+        room.currentQ++;
+        startQuestion(room);
       }
       break;
     }
