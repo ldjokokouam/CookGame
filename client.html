@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CookQuiz</title>
+<favicon href="logo.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --cream:#FFF8F0; --orange:#FF6B35; --orange-l:#FF8C5A;
+  --yellow:#FFD166; --green:#06D6A0; --green-d:#05A87D;
+  --red:#EF476F; --red-d:#C7385A; --purple:#7B5EA7; --blue:#4ECDC4;
+  --text:#2D2A26; --text-l:#6B6560;
+  --shadow:0 8px 32px rgba(45,42,38,0.13); --r:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);min-height:100vh;overflow-x:hidden;}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 10% 20%,rgba(255,209,102,.25) 0%,transparent 70%),
+    radial-gradient(ellipse 50% 60% at 90% 80%,rgba(6,214,160,.20) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 40% at 70% 10%,rgba(255,107,53,.15) 0%,transparent 70%);
+}
+#app{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:0 16px 60px;}
+
+/* ── header ── */
+.hdr{text-align:center;padding:24px 0 12px;}
+.hdr h1{font-family:'Pacifico',cursive;font-size:clamp(2rem,6vw,3rem);color:var(--orange);text-shadow:3px 3px 0 rgba(255,107,53,.2);}
+.hdr p{font-size:.9rem;color:var(--text-l);font-weight:600;margin-top:4px;}
+
+/* ── pages ── */
+.page{display:none;} .page.on{display:block;}
+
+/* ── card ── */
+.card{background:white;border-radius:var(--r);box-shadow:var(--shadow);padding:28px;margin-bottom:20px;}
+.card h2{font-family:'Pacifico',cursive;color:var(--orange);font-size:1.5rem;margin-bottom:6px;}
+.card .sub{color:var(--text-l);font-weight:600;font-size:.88rem;margin-bottom:20px;}
+
+/* ── forms ── */
+.field{margin-bottom:14px;}
+.field label{display:block;font-weight:800;font-size:.88rem;color:var(--text-l);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+.inp{
+  width:100%;padding:12px 16px;border:2.5px solid #EEE8E0;border-radius:12px;
+  font-family:'Nunito',sans-serif;font-size:1rem;font-weight:700;color:var(--text);
+  outline:none;transition:border-color .2s;background:white;
+}
+.inp:focus{border-color:var(--orange);}
+.inp.code-inp{font-size:1.6rem;text-align:center;letter-spacing:6px;text-transform:uppercase;}
+
+.avatar-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.av-btn{
+  width:46px;height:46px;border-radius:50%;border:2.5px solid #EEE8E0;
+  background:white;font-size:1.5rem;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;
+}
+.av-btn:hover{border-color:var(--orange);transform:scale(1.1);}
+.av-btn.sel{border-color:var(--orange);background:#FFF3ED;transform:scale(1.15);}
+
+.or-sep{text-align:center;color:var(--text-l);font-weight:800;font-size:.85rem;margin:16px 0;position:relative;}
+.or-sep::before,.or-sep::after{content:'';position:absolute;top:50%;width:42%;height:2px;background:#EEE8E0;}
+.or-sep::before{left:0;} .or-sep::after{right:0;}
+
+/* ── buttons ── */
+.btn{
+  display:block;width:100%;padding:14px;border:none;border-radius:14px;
+  font-family:'Nunito',sans-serif;font-size:1rem;font-weight:800;
+  cursor:pointer;transition:all .2s;letter-spacing:.3px;
+}
+.btn-orange{background:linear-gradient(135deg,var(--orange),var(--orange-l));color:white;box-shadow:0 6px 18px rgba(255,107,53,.38);}
+.btn-orange:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 24px rgba(255,107,53,.48);}
+.btn-green{background:linear-gradient(135deg,var(--green),var(--green-d));color:white;box-shadow:0 6px 18px rgba(6,214,160,.38);}
+.btn-green:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 24px rgba(6,214,160,.48);}
+.btn-purple{background:linear-gradient(135deg,var(--purple),#9B7EC8);color:white;box-shadow:0 6px 18px rgba(123,94,167,.38);}
+.btn-purple:hover:not(:disabled){transform:translateY(-2px);}
+.btn:disabled{background:#D4CFC8;box-shadow:none;cursor:default;transform:none;}
+.btn-sm{width:auto;display:inline-block;padding:10px 22px;font-size:.88rem;}
+
+/* ── lobby ── */
+.room-code-display{
+  font-family:'Pacifico',cursive;font-size:3.5rem;color:var(--orange);
+  text-align:center;letter-spacing:8px;margin:8px 0;
+}
+.player-list{display:flex;flex-direction:column;gap:10px;margin:16px 0;}
+.player-row{
+  display:flex;align-items:center;gap:12px;background:#FFF8F0;
+  border-radius:12px;padding:10px 14px;
+}
+.p-av{font-size:1.6rem;} .p-name{font-weight:800;color:var(--text);flex:1;}
+.p-host{font-size:.72rem;font-weight:900;color:white;background:var(--orange);border-radius:50px;padding:2px 10px;}
+.p-ready{font-size:.75rem;font-weight:800;color:var(--green-d);}
+.waiting-dots::after{content:'...';animation:dots 1.2s infinite;}
+@keyframes dots{0%{content:''}33%{content:'.'}66%{content:'..'}100%{content:'...'}}
+
+/* ── countdown ── */
+.countdown-wrap{text-align:center;padding:60px 20px;animation:popIn .4s cubic-bezier(.34,1.56,.64,1);}
+.countdown-num{font-family:'Pacifico',cursive;font-size:8rem;color:var(--orange);animation:pulse 1s ease infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.countdown-wrap p{font-weight:800;font-size:1.2rem;color:var(--text-l);margin-top:12px;}
+
+/* ── question ── */
+.dish-card{
+  background:white;border-radius:var(--r);box-shadow:var(--shadow);
+  overflow:hidden;margin-bottom:18px;
+  animation:slideDown .45s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes slideDown{from{opacity:0;transform:translateY(-24px) scale(.96);}to{opacity:1;transform:none;}}
+.img-wrap{width:100%;height:190px;position:relative;overflow:hidden;}
+.img-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .4s;display:block;}
+.img-wrap:hover img{transform:scale(1.04);}
+.img-overlay{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(to top,rgba(45,42,38,.8) 0%,transparent 100%);
+  padding:16px 20px 12px;
+}
+.dish-name{font-family:'Pacifico',cursive;font-size:clamp(1.3rem,4vw,1.9rem);color:white;text-shadow:0 2px 8px rgba(0,0,0,.4);}
+.dish-origin{font-size:.8rem;color:rgba(255,255,255,.8);font-weight:600;margin-top:2px;}
+.dish-hint{padding:11px 20px;font-size:.9rem;color:var(--text-l);font-weight:700;}
+.dish-hint span{color:var(--orange);}
+
+/* ── timer ── */
+.timer-bar-wrap{height:8px;background:#EEE8E0;border-radius:50px;margin-bottom:16px;overflow:hidden;}
+.timer-bar{height:100%;border-radius:50px;transition:width .5s linear,background .5s;background:var(--green);}
+
+/* ── answered bar ── */
+.answered-bar{
+  display:flex;align-items:center;gap:10px;background:white;border-radius:12px;
+  padding:10px 16px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:16px;
+  font-size:.85rem;font-weight:700;color:var(--text-l);
+}
+.answered-pips{display:flex;gap:5px;flex-wrap:wrap;flex:1;}
+.pip{width:24px;height:24px;border-radius:50%;border:2px solid #EEE8E0;font-size:.85rem;display:flex;align-items:center;justify-content:center;}
+.pip.done{border-color:var(--green);background:#DCFFF4;}
+
+/* ── ingredients grid ── */
+.grid-title{font-weight:800;font-size:.85rem;color:var(--text-l);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:9px;margin-bottom:18px;}
+.ing{
+  background:white;border:2.5px solid #EEE8E0;border-radius:13px;
+  padding:11px 7px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  transition:all .17s cubic-bezier(.34,1.56,.64,1);
+  position:relative;box-shadow:0 2px 8px rgba(0,0,0,.06);user-select:none;
+}
+.ing:hover:not(.done):not(.locked){transform:translateY(-3px) scale(1.04);box-shadow:0 8px 18px rgba(0,0,0,.11);border-color:var(--yellow);}
+.ing.sel{border-color:var(--orange);background:#FFF3ED;transform:scale(1.04);}
+.ing.c-rev{border-color:var(--green);background:#DCFFF4;animation:cPop .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes cPop{0%{transform:scale(1)}50%{transform:scale(1.14) rotate(-3deg)}100%{transform:scale(1.04)}}
+.ing.w-rev{border-color:var(--red);background:#FFF0F3;animation:shake .4s ease;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px) rotate(-2deg)}75%{transform:translateX(5px) rotate(2deg)}}
+.ing.m-rev{border-color:var(--yellow);background:#FFF9E6;opacity:.75;}
+.ing.locked{cursor:default;}
+.em{font-size:1.9rem;line-height:1;pointer-events:none;}
+.nm{font-size:.72rem;font-weight:700;color:var(--text);text-align:center;line-height:1.3;pointer-events:none;}
+.bdg{
+  position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;font-weight:900;border:2px solid white;pointer-events:none;
+}
+.bdg.ok{background:var(--green);color:white;}
+.bdg.bad{background:var(--red);color:white;}
+.bdg.mis{background:var(--yellow);color:#333;}
+
+/* ── submit btn ── */
+.btn-submit{
+  display:block;width:100%;padding:14px;border:none;border-radius:14px;
+  font-family:'Nunito',sans-serif;font-size:1rem;font-weight:800;
+  cursor:pointer;transition:all .2s;
+  background:linear-gradient(135deg,var(--orange),var(--orange-l));
+  color:white;box-shadow:0 6px 18px rgba(255,107,53,.38);
+}
+.btn-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 24px rgba(255,107,53,.48);}
+.btn-submit:disabled{background:#D4CFC8;box-shadow:none;cursor:default;transform:none;}
+.submitted-msg{
+  text-align:center;padding:14px;background:#DCFFF4;border-radius:14px;
+  color:var(--green-d);font-weight:800;font-size:.95rem;
+  animation:popIn .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{opacity:0;transform:scale(.87);}to{opacity:1;transform:scale(1);}}
+
+/* ── reveal ── */
+.reveal-pts{
+  text-align:center;padding:12px;border-radius:14px;font-weight:800;font-size:1rem;
+  margin-bottom:14px;animation:popIn .35s cubic-bezier(.34,1.56,.64,1);
+}
+.reveal-pts.pos{background:#DCFFF4;color:var(--green-d);border:2px solid var(--green);}
+.reveal-pts.zero{background:#FFF0F3;color:var(--red-d);border:2px solid var(--red);}
+
+/* ── mini leaderboard ── */
+.mini-lb{background:white;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px;}
+.mini-lb-title{padding:12px 18px;font-weight:900;font-size:.85rem;color:var(--text-l);text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #F5EEE6;}
+.lb-row{
+  display:flex;align-items:center;gap:12px;padding:10px 16px;
+  border-bottom:1px solid #F5EEE6;
+}
+.lb-row:last-child{border-bottom:none;}
+.lb-rank{font-family:'Pacifico',cursive;font-size:1.3rem;min-width:30px;text-align:center;}
+.lb-av{font-size:1.5rem;}
+.lb-name{flex:1;font-weight:800;font-size:.95rem;color:var(--text);}
+.lb-pts{font-family:'Pacifico',cursive;font-size:1.3rem;color:var(--orange);}
+.lb-delta{font-size:.75rem;color:var(--green-d);font-weight:800;margin-left:4px;}
+
+/* ── results page ── */
+.results-wrap{text-align:center;padding:20px 0;}
+.results-trophy{font-size:5rem;display:inline-block;animation:bounce 1s infinite alternate;margin-bottom:8px;}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-14px)}}
+.results-wrap h2{font-family:'Pacifico',cursive;font-size:2.2rem;color:var(--orange);margin-bottom:4px;}
+.results-wrap p{color:var(--text-l);font-weight:700;font-size:.95rem;margin-bottom:20px;}
+.results-lb{margin-bottom:24px;}
+.results-row{
+  display:flex;align-items:center;gap:14px;padding:14px 18px;
+  border-radius:14px;margin-bottom:10px;background:white;box-shadow:var(--shadow);
+  animation:popIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+.results-row.r1{background:linear-gradient(135deg,#FFF8DC,#FFF0A0);border:2px solid var(--yellow);}
+.results-row.r2{background:linear-gradient(135deg,#F5F5F5,#E8E8E8);border:2px solid #C0C0C0;}
+.results-row.r3{background:linear-gradient(135deg,#FFF0E6,#FFE0C8);border:2px solid #CD7F32;}
+.results-rank{font-family:'Pacifico',cursive;font-size:1.8rem;min-width:38px;}
+.results-av{font-size:2rem;}
+.results-info{flex:1;text-align:left;}
+.results-name{font-weight:900;font-size:1.05rem;color:var(--text);}
+.results-score{font-family:'Pacifico',cursive;font-size:1.6rem;color:var(--orange);}
+
+/* ── toast ── */
+#toast{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  background:#2D2A26;color:white;border-radius:12px;
+  padding:12px 24px;font-weight:800;font-size:.9rem;
+  box-shadow:0 8px 24px rgba(0,0,0,.3);
+  opacity:0;transition:opacity .3s;pointer-events:none;z-index:99;white-space:nowrap;
+}
+#toast.show{opacity:1;}
+
+/* ── connecting ── */
+.conn-wrap{text-align:center;padding:60px 20px;}
+.conn-spinner{
+  width:50px;height:50px;border:5px solid #EEE8E0;border-top-color:var(--orange);
+  border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hdr">
+    <h1>🍳 CookQuiz</h1>
+    <p>Le quiz cuisine multijoueur en temps réel !</p>
+  </div>
+
+  <!-- CONNECTING -->
+  <div class="page on" id="pg-conn">
+    <div class="conn-wrap">
+      <div class="conn-spinner"></div>
+      <p style="font-weight:700;color:var(--text-l);">Connexion au serveur<span class="waiting-dots"></span></p>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="page" id="pg-home">
+    <div class="card">
+      <h2>👤 Ton profil</h2>
+      <div class="sub">Choisis ton nom et ton avatar</div>
+      <div class="field">
+        <label>Prénom</label>
+        <input class="inp" id="inp-name" placeholder="Ex: Marie" maxlength="16"/>
+      </div>
+      <div class="field">
+        <label>Avatar</label>
+        <div class="avatar-row" id="avatar-row"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>🎮 Créer une partie</h2>
+      <div class="sub">Tu seras l'hôte et pourras démarrer quand tout le monde est prêt</div>
+      <button class="btn btn-orange" id="btn-create">Créer une salle</button>
+    </div>
+    <div class="or-sep">ou</div>
+    <div class="card">
+      <h2>🔗 Rejoindre</h2>
+      <div class="sub">Entre le code de la salle</div>
+      <div class="field">
+        <input class="inp code-inp" id="inp-code" placeholder="ABCD" maxlength="4"/>
+      </div>
+      <button class="btn btn-purple" id="btn-join">Rejoindre</button>
+    </div>
+  </div>
+
+  <!-- LOBBY -->
+  <div class="page" id="pg-lobby">
+    <div class="card">
+      <h2>🏠 Salle de jeu</h2>
+      <div class="sub">Partage ce code avec tes amis</div>
+      <div class="room-code-display" id="lob-code"></div>
+      <div class="sub" style="text-align:center;margin-top:4px;">Chacun ouvre <strong id="lob-url"></strong> sur son appareil</div>
+    </div>
+    <div class="card">
+      <h2>Joueurs connectés</h2>
+      <div class="player-list" id="lob-players"></div>
+      <div id="lob-actions"></div>
+    </div>
+  </div>
+
+  <!-- COUNTDOWN -->
+  <div class="page" id="pg-countdown">
+    <div class="countdown-wrap">
+      <div class="countdown-num" id="cd-num">3</div>
+      <p>La partie commence !</p>
+    </div>
+  </div>
+
+  <!-- QUESTION -->
+  <div class="page" id="pg-question">
+    <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+    <div class="answered-bar">
+      <span>Répondu :</span>
+      <div class="answered-pips" id="answered-pips"></div>
+      <span id="answered-count" style="font-size:.8rem;"></span>
+    </div>
+    <div class="dish-card">
+      <div class="img-wrap"><img id="q-img" src="" alt=""/><div class="img-overlay"><div class="dish-name" id="q-name"></div><div class="dish-origin" id="q-origin"></div></div></div>
+      <div class="dish-hint">Sélectionne les <span id="q-count" style="color:var(--orange);font-weight:900;"></span> ingrédients de ce plat !</div>
+    </div>
+    <div class="grid-title">Ingrédients disponibles</div>
+    <div class="grid" id="q-grid"></div>
+    <div id="q-action"></div>
+  </div>
+
+  <!-- REVEAL -->
+  <div class="page" id="pg-reveal">
+    <div id="rv-pts"></div>
+    <div class="dish-card" style="margin-bottom:14px;">
+      <div class="img-wrap" style="height:140px;"><img id="rv-img" src="" alt=""/><div class="img-overlay"><div class="dish-name" id="rv-name" style="font-size:1.3rem;"></div></div></div>
+    </div>
+    <div class="grid-title">Résultats</div>
+    <div class="grid" id="rv-grid" style="margin-bottom:18px;"></div>
+    <div class="mini-lb" id="rv-lb"></div>
+    <p style="text-align:center;color:var(--text-l);font-weight:700;font-size:.85rem;margin-top:12px;" id="rv-next"></p>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="page" id="pg-results">
+    <div class="results-wrap">
+      <div class="results-trophy">🏆</div>
+      <h2>Classement final !</h2>
+      <p id="res-winner"></p>
+      <div class="results-lb" id="res-lb"></div>
+      <div id="res-actions"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Config ───────────────────────────────────────────────────────────────
+const AVATARS = ['🧑‍🍳','👨‍🍳','👩‍🍳','🧑','👦','👧','🧔','👱','🙋','🙋‍♂️','🧙','🦸'];
+
+const EMOJIS = {
+  "Tomate":"🍅","Courgette":"🥒","Aubergine":"🍆","Poivron":"🫑","Ail":"🧄",
+  "Carotte":"🥕","Pomme de terre":"🥔","Champignon":"🍄","Brocoli":"🥦","Oignon":"🧅",
+  "Fenouil":"🌿","Coriandre":"🌿","Avocat":"🥑","Mais":"🌽","Salade":"🥬",
+  "Saumon":"🐟","Crevettes":"🦐","Porc":"🥩","Boeuf":"🥩","Poulet":"🍗","Poisson":"🐠",
+  "Steak":"🥩","Bacon":"🥓","Jambon":"🍖",
+  "Mozzarella":"🧀","Mascarpone":"🧀","Fromage":"🧀","Oeuf":"🥚","Oeuf de canard":"🥚",
+  "Lait":"🥛","Beurre":"🧈","Creme fraiche":"🫙","Creme":"🫙","Bechamel":"🫙",
+  "Jaune d'oeuf":"🥚","Oeufs":"🥚",
+  "Farine":"🌾","Riz":"🍚","Pates":"🍝","Pain":"🍞","Chapelure":"🍞",
+  "Pate brisee":"🥐","Fecule":"🌾","Bouillon":"🍵",
+  "Pomme":"🍎","Citron":"🍋","Zeste de citron":"🍋",
+  "Noix":"🌰","Amandes":"🌰","Huile olive":"🫒","Huile de friture":"🫙",
+  "Safran":"🌼","Curcuma":"🟡","Sel":"🧂","Sel de mer":"🧂","Sucre":"🍬","Cassonade":"🍬",
+  "Cannelle":"🟤","Vanille":"🟤","Moutarde":"🟡","Basilic":"🌿","Persil":"🌿",
+  "Piment":"🌶️","Piment fume":"🌶️","Piment de Padron":"🫑","Piments de Padron":"🫑",
+  "Levure":"🧫","Olives noires":"🫒","Vin rouge":"🍷","Vin blanc":"🍷","Vinaigre":"🍶",
+  "Capres":"🟢","Anchois":"🐟","Chorizo":"🌭","Morcilla":"🌭",
+  "Jambon iberico":"🍖","Confit de canard":"🍗","Lapin":"🥩","Poulpe":"🐙",
+  "Haricots verts":"🫘","Haricots blancs":"🫘","Pois chiches":"🫘",
+  "Poireau":"🥬","Navet":"⚪","Os a moelle":"🦴","Chou":"🥦",
+  "Noix de muscade":"🌰","Lardons":"🥓",
+};
+
+// ── State ─────────────────────────────────────────────────────────────────
+let ws, myId, myRoom;
+let selectedAvatar = AVATARS[0];
+let selectedIngredients = new Set();
+let hasSubmitted = false;
+let timerInterval = null;
+let currentQuestion = null; // last question msg
+let prevScores = {};        // for delta display
+
+// ── Pages ─────────────────────────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastT;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Avatar picker ─────────────────────────────────────────────────────────
+const avRow = document.getElementById('avatar-row');
+AVATARS.forEach((av, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'av-btn' + (i === 0 ? ' sel' : '');
+  btn.textContent = av;
+  btn.onclick = () => {
+    selectedAvatar = av;
+    avRow.querySelectorAll('.av-btn').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+  };
+  avRow.appendChild(btn);
+});
+
+// ── WebSocket ─────────────────────────────────────────────────────────────
+function connect() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}`);
+
+  ws.onopen = () => {
+    show('pg-home');
+    document.getElementById('lob-url').textContent = location.host;
+  };
+
+  ws.onmessage = e => {
+    try { handle(JSON.parse(e.data)); } catch(err) { console.error(err); }
+  };
+
+  ws.onclose = () => {
+    show('pg-conn');
+    setTimeout(connect, 2000);
+  };
+
+  ws.onerror = () => ws.close();
+}
+
+function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
+
+// ── Home actions ──────────────────────────────────────────────────────────
+function getName() { return document.getElementById('inp-name').value.trim() || 'Anonyme'; }
+
+document.getElementById('btn-create').onclick = () => {
+  send({ type: 'create_room', name: getName(), avatar: selectedAvatar });
+};
+
+document.getElementById('btn-join').onclick = () => {
+  const code = document.getElementById('inp-code').value.trim().toUpperCase();
+  if (code.length !== 4) { toast('❌ Code à 4 lettres !'); return; }
+  send({ type: 'join_room', code, name: getName(), avatar: selectedAvatar });
+};
+
+document.getElementById('inp-code').addEventListener('input', e => {
+  e.target.value = e.target.value.toUpperCase();
+});
+
+// ── Lobby ─────────────────────────────────────────────────────────────────
+function renderLobby(state) {
+  show('pg-lobby');
+  document.getElementById('lob-code').textContent = state.code;
+  const isHost = state.host === myId;
+
+  const list = document.getElementById('lob-players');
+  list.innerHTML = state.players.map(p => `
+    <div class="player-row">
+      <span class="p-av">${p.avatar}</span>
+      <span class="p-name">${p.name}${p.id === myId ? ' (moi)' : ''}</span>
+      ${p.id === state.host ? '<span class="p-host">Hôte</span>' : ''}
+    </div>`).join('');
+
+  const actions = document.getElementById('lob-actions');
+  if (isHost) {
+    actions.innerHTML = `
+      <button class="btn btn-green" id="btn-start-game" ${state.players.length < 1 ? 'disabled' : ''}>
+        🚀 Démarrer la partie (${state.players.length} joueur${state.players.length > 1 ? 's' : ''})
+      </button>`;
+    document.getElementById('btn-start-game').onclick = () => send({ type: 'start_game' });
+  } else {
+    actions.innerHTML = `<p style="text-align:center;color:var(--text-l);font-weight:700;font-size:.9rem;padding:12px 0;">En attente que l'hôte démarre<span class="waiting-dots"></span></p>`;
+  }
+}
+
+// ── Countdown UI ──────────────────────────────────────────────────────────
+function startCountdownUI(seconds) {
+  const el = document.getElementById('cd-num');
+  let n = seconds;
+  el.textContent = n;
+  const iv = setInterval(() => {
+    n--;
+    if (n <= 0) { clearInterval(iv); return; }
+    el.textContent = n;
+  }, 1000);
+}
+
+// ── Question ──────────────────────────────────────────────────────────────
+let currentPlayers = [];
+
+function showQuestion(msg) {
+  clearInterval(timerInterval);
+  selectedIngredients = new Set();
+  hasSubmitted = false;
+  show('pg-question');
+
+  document.getElementById('q-img').src = msg.dish.image;
+  document.getElementById('q-name').textContent = msg.dish.name;
+  document.getElementById('q-origin').textContent = msg.dish.origin;
+  document.getElementById('q-count').textContent = msg.dish.correctCount;
+
+  // Build grid
+  const grid = document.getElementById('q-grid');
+  grid.innerHTML = msg.ingredients.map(name => {
+    const em = EMOJIS[name] || '🥄';
+    return `<div class="ing" data-n="${name}"><span class="em">${em}</span><span class="nm">${name}</span></div>`;
+  }).join('');
+
+  grid.addEventListener('click', onIngClick);
+
+  document.getElementById('q-action').innerHTML =
+    `<button class="btn-submit" id="btn-submit" disabled>✅ Valider</button>`;
+  document.getElementById('btn-submit').onclick = submitAnswer;
+
+  // Timer
+  startTimer(msg.timerEnd);
+
+  // Answered pips (unknown players count at start)
+  document.getElementById('answered-pips').innerHTML = '';
+  document.getElementById('answered-count').textContent = '';
+}
+
+function onIngClick(e) {
+  if (hasSubmitted) return;
+  const ing = e.target.closest('.ing');
+  if (!ing) return;
+  const name = ing.dataset.n;
+  if (selectedIngredients.has(name)) selectedIngredients.delete(name);
+  else selectedIngredients.add(name);
+  ing.classList.toggle('sel', selectedIngredients.has(name));
+  document.getElementById('btn-submit').disabled = selectedIngredients.size === 0;
+}
+
+function submitAnswer() {
+  if (hasSubmitted) return;
+  hasSubmitted = true;
+  send({ type: 'submit_answer', selected: [...selectedIngredients] });
+  // Lock grid
+  document.querySelectorAll('.ing').forEach(el => el.classList.add('locked'));
+  document.getElementById('q-action').innerHTML =
+    `<div class="submitted-msg">✅ Réponse envoyée ! En attente des autres<span class="waiting-dots"></span></div>`;
+}
+
+function updateAnsweredBar(answered, total, pid) {
+  const pips = document.getElementById('answered-pips');
+  const existing = pips.querySelectorAll('.pip');
+  // Ensure we have enough pips
+  while (pips.children.length < total) {
+    const pip = document.createElement('div');
+    pip.className = 'pip';
+    pip.textContent = '?';
+    pips.appendChild(pip);
+  }
+  // Mark answered count
+  [...pips.children].forEach((pip, i) => {
+    if (i < answered) pip.classList.add('done');
+  });
+  document.getElementById('answered-count').textContent = `${answered}/${total}`;
+}
+
+// ── Timer ─────────────────────────────────────────────────────────────────
+function startTimer(timerEnd) {
+  const bar = document.getElementById('timer-bar');
+  const total = timerEnd - Date.now();
+
+  function tick() {
+    const left = timerEnd - Date.now();
+    const pct = Math.max(0, (left / total) * 100);
+    bar.style.width = pct + '%';
+    if (pct > 50) bar.style.background = 'var(--green)';
+    else if (pct > 25) bar.style.background = 'var(--yellow)';
+    else bar.style.background = 'var(--red)';
+    if (left <= 0) { clearInterval(timerInterval); bar.style.width = '0%'; }
+  }
+  tick();
+  timerInterval = setInterval(tick, 200);
+}
+
+// ── Reveal ────────────────────────────────────────────────────────────────
+function showReveal(msg) {
+  clearInterval(timerInterval);
+  show('pg-reveal');
+
+  if (!currentQuestion) return;
+  const correctSet = new Set(msg.correct);
+  const myAns = msg.answers[myId] || { selected: [], pts: 0 };
+  const mySelected = new Set(myAns.selected);
+
+  // Score feedback
+  const ptsEl = document.getElementById('rv-pts');
+  if (myAns.pts > 0) {
+    ptsEl.innerHTML = `<div class="reveal-pts pos">+${myAns.pts} pts 🎉</div>`;
+  } else {
+    ptsEl.innerHTML = `<div class="reveal-pts zero">0 pts — Pas de chance ! 😅</div>`;
+  }
+
+  // Dish image
+  document.getElementById('rv-img').src = currentQuestion.dish.image;
+  document.getElementById('rv-name').textContent = currentQuestion.dish.name;
+
+  // Ingredient grid with states
+  const grid = document.getElementById('rv-grid');
+  grid.innerHTML = currentQuestion.ingredients.map(name => {
+    const em = EMOJIS[name] || '🥄';
+    let cls = 'locked';
+    let badge = '';
+    if (mySelected.has(name) && correctSet.has(name)) { cls += ' c-rev'; badge = '<span class="bdg ok">✓</span>'; }
+    else if (mySelected.has(name) && !correctSet.has(name)) { cls += ' w-rev'; badge = '<span class="bdg bad">✗</span>'; }
+    else if (!mySelected.has(name) && correctSet.has(name)) { cls += ' m-rev'; badge = '<span class="bdg mis">!</span>'; }
+    return `<div class="ing ${cls}">${badge}<span class="em">${em}</span><span class="nm">${name}</span></div>`;
+  }).join('');
+
+  // Mini leaderboard
+  const lb = document.getElementById('rv-lb');
+  const rankEmoji = ['🥇','🥈','🥉'];
+  lb.innerHTML = `<div class="mini-lb-title">Classement</div>` +
+    msg.leaderboard.map((p, i) => {
+      const prev = prevScores[p.id] || 0;
+      const delta = p.score - prev;
+      return `<div class="lb-row">
+        <div class="lb-rank">${rankEmoji[i] || `#${i+1}`}</div>
+        <div class="lb-av">${getPlayerAvatar(p.id)}</div>
+        <div class="lb-name">${p.name}${p.id === myId ? ' (moi)' : ''}</div>
+        <div class="lb-pts">${p.score}<span class="lb-delta">${delta > 0 ? `+${delta}` : ''}</span></div>
+      </div>`;
+    }).join('');
+
+  // Store scores for next delta
+  msg.leaderboard.forEach(p => prevScores[p.id] = p.score);
+
+  document.getElementById('rv-next').textContent = msg.isLast
+    ? '⏳ Résultats finaux dans quelques secondes...'
+    : '⏳ Prochain plat dans quelques secondes...';
+}
+
+function getPlayerAvatar(id) {
+  // Try to find from current lobby state - stored in window
+  return window._playerAvatars?.[id] || '🧑';
+}
+
+// ── Message handler ───────────────────────────────────────────────────────
+function handle(msg) {
+  // Cache avatars whenever a player list is present
+  if (msg.players) {
+    window._playerAvatars = window._playerAvatars || {};
+    msg.players.forEach(p => window._playerAvatars[p.id] = p.avatar);
+  }
+
+  switch (msg.type) {
+
+    case 'room_created':
+    case 'joined':
+      myId = msg.playerId;
+      myRoom = msg.code;
+      break;
+
+    case 'room_state':
+    case 'player_joined':
+    case 'player_left':
+      renderLobby(msg);
+      break;
+
+    case 'error':
+      toast('❌ ' + msg.text);
+      break;
+
+    case 'countdown':
+      show('pg-countdown');
+      startCountdownUI(msg.seconds);
+      break;
+
+    case 'question':
+      currentQuestion = msg;
+      prevScores = {};
+      showQuestion(msg);
+      break;
+
+    case 'player_answered':
+      updateAnsweredBar(msg.answeredCount, msg.totalCount, msg.playerId);
+      break;
+
+    case 'reveal':
+      showReveal(msg);
+      break;
+
+    case 'results':
+      showResults(msg);
+      break;
+  }
+}
+
+// ── Results ───────────────────────────────────────────────────────────────
+function showResults(msg) {
+  show('pg-results');
+  clearInterval(timerInterval);
+
+  const winner = msg.leaderboard[0];
+  document.getElementById('res-winner').textContent =
+    `${winner?.avatar || '🏆'} ${winner?.name} remporte la partie avec ${winner?.score} pts !`;
+
+  const rankEmoji = ['🥇','🥈','🥉'];
+  const rankCls = ['r1','r2','r3'];
+  document.getElementById('res-lb').innerHTML = msg.leaderboard.map((p, i) => `
+    <div class="results-row ${rankCls[i] || ''}">
+      <div class="results-rank">${rankEmoji[i] || `#${i+1}`}</div>
+      <div class="results-av">${window._playerAvatars?.[p.id] || '🧑'}</div>
+      <div class="results-info">
+        <div class="results-name">${p.name}${p.id === myId ? ' (moi)' : ''}</div>
+      </div>
+      <div class="results-score">${p.score} pts</div>
+    </div>`).join('');
+
+  // Only host can restart
+  const actEl = document.getElementById('res-actions');
+  // We don't know if we're host here easily, show button that server will validate
+  actEl.innerHTML = `
+    <button class="btn btn-orange" id="btn-again">🔄 Rejouer !</button>
+    <button class="btn btn-purple" id="btn-home" style="margin-top:10px;">🏠 Accueil</button>`;
+  document.getElementById('btn-again').onclick = () => send({ type: 'play_again' });
+  document.getElementById('btn-home').onclick = () => { myRoom = null; show('pg-home'); };
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+connect();
+</script>
+</body>
+</html>
