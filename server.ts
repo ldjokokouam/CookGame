@@ -154,7 +154,7 @@ function sendWS(socket: WsSocket, obj: ServerMessage): void {
 const DISHES: Dish[] = [
   // ── 🇫🇷 Plats français ──
   { id: 1,  name: "Ratatouille",        origin: "🇫🇷 Provence",   image: "https://images.unsplash.com/photo-1572453800999-e8d2d1589b7c?w=800&q=80", correct: ["Tomate","Courgette","Aubergine","Poivron","Ail"],                    decoys: ["Carotte","Pomme de terre","Champignon","Brocoli","Pates"] },
-  { id: 2,  name: "Crepes Bretonnes",   origin: "🇫🇷 Bretagne",   image: "https://images.unsplash.com/photo-1519676867240-f03562e64548?w=800&q=80", correct: ["Farine","Oeuf","Lait","Beurre","Sel"],                              decoys: ["Fromage","Ail","Tomate","Riz","Curcuma"] },
+  { id: 2,  name: "Crepes Bretonnes",   origin: "🇫🇷 Bretagne",   image: "https://img-3.journaldesfemmes.fr/it0NyV1p7TtW-Y4c6vHKKhTdfs8=/800x600/6db521e96eb84faf83409ad57b56fbcd/ccmcms-jdf/40014159.jpg", correct: ["Farine","Oeuf","Lait","Beurre","Sel"],                              decoys: ["Fromage","Ail","Tomate","Riz","Curcuma"] },
   { id: 3,  name: "Croissant",          origin: "🇫🇷 Paris",      image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=80", correct: ["Farine","Beurre","Lait","Levure","Sel"],                              decoys: ["Sucre","Fromage","Huile olive","Noix","Oeuf"] },
   { id: 4,  name: "Galette Bretonne",   origin: "🇫🇷 Bretagne",   image: "https://cdn.prod.website-files.com/5d0c269d409e5b11b36e12aa/679c9c6f047064a7039fa600_galettes-bretonnes-completes_photo.webp", correct: ["Farine de sarrasin","Oeuf","Beurre","Sel","Lait"],               decoys: ["Sucre","Fromage","Ail","Tomate","Levure"] },
   { id: 5,  name: "Gateau Nantais",     origin: "🇫🇷 Nantes",     image: "https://liliebakery.fr/wp-content/uploads/2024/01/Recette-gateau-nantais-Lilie-Bakery.jpg", correct: ["Farine","Beurre","Sucre","Oeuf","Rhum"],                        decoys: ["Lait","Levure","Cannelle","Fromage","Sel"] },
@@ -194,7 +194,7 @@ function shuffle<T>(arr: T[]): T[] {
 // ── Room / Game state ─────────────────────────────────────────────────────
 
 const ROUND_DURATION = 60; // seconds per question
-const ROUNDS_PER_GAME = 10;
+const ROUNDS_PER_GAME = 15;
 
 const rooms = new Map<string, Room>();
 
@@ -394,8 +394,8 @@ function handleMessage(socket: WsSocket, raw: string): void {
         sendWS(socket, { type: "error", text: "Partie déjà en cours !" });
         return;
       }
-      if (room.players.size >= 20) {
-        sendWS(socket, { type: "error", text: "Salle pleine (20 max) !" });
+      if (room.players.size >= 25) {
+        sendWS(socket, { type: "error", text: "Salle pleine (25 max) !" });
         return;
       }
       const player: Player = {
